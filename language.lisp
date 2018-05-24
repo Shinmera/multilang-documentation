@@ -15,11 +15,16 @@
                                  (identifier c)))))
 
 (defclass language ()
+  ())
+
+(defgeneric documentation-storage (language))
+
+(defclass simple-language (language)
   ((%identifier :initarg :identifier :reader identifier)
    (%documentation-storage :initform (make-hash-table :test 'equal) :reader documentation-storage))
   (:default-initargs :identifier (error "IDENTIFIER required.")))
 
-(defmethod print-object ((language language) stream)
+(defmethod print-object ((language simple-language) stream)
   (print-unreadable-object (language stream :type T)
     (format stream "~s~@[ (~{~s~^ ~})~]"
             (identifier language) (language-codes:codes (identifier language)))))
@@ -29,8 +34,9 @@
 (defmethod language ((identifier string) &key (if-does-not-exist :error))
   (or (gethash identifier *languages*)
       (ecase if-does-not-exist
+        (:create (setf (gethash identifier *languages*)
+                       (make-instance 'simple-language :identifier identifier)))
         (:error (error 'no-such-language :identifier identifier))
-        (:create (setf (gethash identifier *languages*) (make-instance 'language :identifier identifier)))
         ((NIL) NIL))))
 
 (defmethod language ((identifier symbol) &key (if-does-not-exist :error))
