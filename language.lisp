@@ -17,6 +17,7 @@
 (defclass language ()
   ())
 
+(defgeneric identifier (language))
 (defgeneric documentation-storage (language))
 
 (defclass simple-language (language)
@@ -28,6 +29,10 @@
   (print-unreadable-object (language stream :type T)
     (format stream "~s~@[ (~{~s~^ ~})~]"
             (identifier language) (language-codes:codes (identifier language)))))
+
+(defmethod make-load-form ((language simple-language) &optional env)
+  (declare (ignore env))
+  `(language ,(identifier language) :if-does-not-exist :create))
 
 (defgeneric language (identifier &key if-does-not-exist))
 

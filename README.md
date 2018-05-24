@@ -30,4 +30,4 @@ Some docstrings can be identified in multiple ways, like `(#<function foo> T)` a
     (defmethod multilang-documentation:canonicalize-doctype ((name symbol) (type (eql 'my-type)))
       (find-my-type-instance name))
 
-In case you have your own system that deals with languages and would like to integrate this library with it, you should make your languages subclass `language`, and either add a method to `documentation-storage`, or to `documentation*` and `(setf documentation*)` to handle the docstring lookup and storage. Finally, if you would like to override the language lookup mechanism, you should override the `string`-specialised method on `language` as well.
+In case you have your own system that deals with languages and would like to integrate this library with it, you should make your languages subclass `language`, add a method to `identifier`, and either add a method to `documentation-storage`, or to `documentation*` and `(setf documentation*)` to handle the docstring lookup and storage. Finally, if you would like to override the language lookup mechanism, you should override the `string`-specialised method on `language` as well.
