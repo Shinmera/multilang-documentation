@@ -1,0 +1,206 @@
+<!DOCTYPE html> <html xmlns="http://www.w3.org/1999/xhtml"> <head> <meta charset="utf-8"> <title>Multilang-Documentation</title> <meta name="viewport" content="width=device-width"> <meta name="description" content="A drop-in replacement for CL:DOCUMENTATION providing multi-language docstrings"> <meta name="author" content="Nicolas Hafner &lt;shinmera@tymoon.eu&gt;"> <style type="text/css"> body{
+          max-width: 1024px;
+          margin: 0 auto 0 auto;
+          font-family: sans-serif;
+          color: #333333;
+          font-size: 14pt;
+          padding: 5px;
+      }
+      body>header{
+          display:flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          max-width: 100%;
+          text-align: center;
+      }
+      body>header img{
+          max-width: 50%;
+      }
+      img{
+          max-width: 100%;
+          max-height: 100%;
+      }
+      code{
+          font-family: Consolas, Inconsolata, monospace;
+      }
+      a{
+          text-decoration: none;
+          color: #0055AA;
+      }
+      a img{
+          border: none;
+      }
+      #documentation{
+          text-align: justify;
+      }
+      #documentation pre{
+          margin-left: 20px;
+          overflow: auto;
+      }
+      #documentation img{
+          margin: 5px;
+      }
+      #symbol-index>ul{
+          list-style: none;
+          padding: 0;
+      }
+      #symbol-index .package>ul{
+          list-style: none;
+          padding: 0 0 0 10px;
+      }
+      #symbol-index .package .nicknames{
+          font-weight: normal;
+      }
+      #symbol-index .package h4{
+          display: inline-block;
+          margin: 0;
+      }
+      #symbol-index .package article{
+          margin: 0 0 15px 0;
+      }
+      #symbol-index .package article header{
+          font-size: 1.2em;
+          font-weight: normal;
+      }
+      #symbol-index .package .name{
+          margin-right: 5px;
+      }
+      #symbol-index .package .docstring{
+          margin: 0 0 0 15px;
+          white-space: pre-wrap;
+          font-size: 12pt;
+      }
+      @media (max-width: 800px){
+          body{font-size: 12pt;}
+      } </style> </head> <body> <header> <h1>multilang-documentation</h1> <span class="version">1.0.0</span> <p class="description">A drop-in replacement for CL:DOCUMENTATION providing multi-language docstrings</p> </header> <main> <article id="documentation">  <div><h2>About Multilang-Documentation</h2> <p>This library provides a drop-in replacement function for <code><a href="http://l1sp.org/cl/documentation">cl:documentation</a></code> that supports multiple docstrings per-language, allowing you to write documentation that can be internationalised.</p> <h2>How To</h2> <p>If you want to use this library's <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION">documentation</a></code> function instead of <code>cl</code>'s, you can simply add this to your package definition:</p> <pre><code>(:shadowing-import-from #:multilang-documentation #:documentation)
+</code></pre> <p>You can also do this at the REPL using <code><a href="http://l1sp.org/cl/shadowing-import">shadowing-import</a></code>:</p> <pre><code>(<a href="http://l1sp.org/cl/shadowing-import">shadowing-import</a> 'multilang-documentation:documentation)
+</code></pre> <p>The new <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION">documentation</a></code> introduces a <code>:lang</code> keyword argument with which you can specify the language of the docstring. The default language of your system is determined automatically via the available system information. Please consult <a href="https://shinmera.github.io/system-locale">system-locale</a> for this mechanism. If you would like to force a specific language as the default, you can set the <code><a href="#MULTILANG-DOCUMENTATION:*LANGUAGE*">*language*</a></code> variable like so:</p> <pre><code>(<a href="http://l1sp.org/cl/setf">setf</a> multilang-documentation:*language* 
+      (<a href="#MULTILANG-DOCUMENTATION:LANGUAGE">multilang-documentation:language</a> &quot;Japanese&quot; :if-does-not-exist :create))
+</code></pre> <p>You may either use a two or three-letter <a href="https://shinmera.github.io/language-codes">ISO-639 language code keyword</a>, or a full language name as a string to identify the language.</p> <p>Note that <code><a href="http://l1sp.org/cl/documentation">cl:documentation</a></code> is used as fallback lookup mechanism if the language passed to <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION">documentation</a></code> is <code><a href="#MULTILANG-DOCUMENTATION:*LANGUAGE*">*LANGUAGE*</a></code> (the default).</p> <p>Also note that <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION">documentation</a></code> can be used as a storage for arbitrary documentation types, unlike <code><a href="http://l1sp.org/cl/documentation">cl:documentation</a></code> which is free to ignore documentation types it doesn't know about. If you do save your own documentation types you should however make sure that the library can canonically identify your docstrings:</p> <p>Some docstrings can be identified in multiple ways, like <code>(#&lt;function foo&gt; T)</code> and <code>('foo 'function)</code>. <code><a href="#MULTILANG-DOCUMENTATION:CANONICALIZE-DOCTYPE">canonicalize-doctype</a></code> exists in order to fix this problem and coerce any kind of combination of object and type parameters into a single, canonical value. This value should be <code><a href="http://l1sp.org/cl/equal">equal</a></code> to other values be considered the same. For instance, if you have a custom documentation object, you can add a canonicalisation by using something like the following:</p> <pre><code>(<a href="http://l1sp.org/cl/defmethod">defmethod</a> multilang-documentation:canonicalize-doctype ((object my-type) type)
+  object)
+
+(<a href="http://l1sp.org/cl/defmethod">defmethod</a> multilang-documentation:canonicalize-doctype ((name symbol) (<a href="http://l1sp.org/cl/type">type</a> (<a href="http://l1sp.org/cl/eql">eql</a> 'my-type)))
+  (find-my-type-instance name))
+</code></pre> <p>In case you have your own system that deals with languages and would like to integrate this library with it, you should make your languages subclass <code><a href="#MULTILANG-DOCUMENTATION:LANGUAGE">language</a></code>, and either add a method to <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE">documentation-storage</a></code>, or to <code><a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION*">documentation*</a></code> and <code>(<a href="http://l1sp.org/cl/setf">setf</a> documentation*)</code> to handle the docstring lookup and storage. Finally, if you would like to override the language lookup mechanism, you should override the <code><a href="http://l1sp.org/cl/string">string</a></code>-specialised method on <code><a href="#MULTILANG-DOCUMENTATION:LANGUAGE">language</a></code> as well.</p> </div>  </article> <article id="copyright">  <h2>Copyright</h2> <span>multilang-documentation</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.  © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span> .  This library can be obtained on <a href="https://github.com/Shinmera/multilang-documentation">https://github.com/Shinmera/multilang-documentation</a>.  </article>  <article id="symbol-index"> <h2>Package Index</h2> <ul> <li class="package"> <h3> <a name="MULTILANG-DOCUMENTATION" href="#MULTILANG-DOCUMENTATION">MULTILANG-DOCUMENTATION</a> <span class="nicknames">(ORG.SHIRAKUMO.MULTILANG-DOCUMENTATION)</span> </h3> <ul> <li> <a name="MULTILANG-DOCUMENTATION:*LANGUAGE*"> </a> <article id="SPECIAL MULTILANG-DOCUMENTATION:*LANGUAGE*"> <header class="special"> <span class="type">special</span>  <h4 class="name"><code><a href="#SPECIAL%20MULTILANG-DOCUMENTATION%3A%2ALANGUAGE%2A">*LANGUAGE*</a></code></h4>  </header> <div class="docstring"><pre>This variable holds the user's chosen language.
+
+Its default value is automatically chosen according to
+the system's configured language.
+
+The value held by this should be a LANGUAGE instance.
+
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">SYSTEM-LOCALE:LANGUAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:LANGUAGE"> </a> <article id="CLASS MULTILANG-DOCUMENTATION:LANGUAGE"> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#CLASS%20MULTILANG-DOCUMENTATION%3ALANGUAGE">LANGUAGE</a></code></h4>  </header> <div class="docstring"><pre>Superclass for all languages that can store docstrings.
+
+Instances of this class can be used to store documentation
+strings.
+
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE">DOCUMENTATION-STORAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION*">DOCUMENTATION*</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:SIMPLE-LANGUAGE"> </a> <article id="CLASS MULTILANG-DOCUMENTATION:SIMPLE-LANGUAGE"> <header class="class"> <span class="type">class</span>  <h4 class="name"><code><a href="#CLASS%20MULTILANG-DOCUMENTATION%3ASIMPLE-LANGUAGE">SIMPLE-LANGUAGE</a></code></h4>  </header> <div class="docstring"><pre>A simple language object that keeps its identifier and a docstring storage.
+
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:IDENTIFIER">IDENTIFIER</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE">DOCUMENTATION-STORAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:NO-SUCH-LANGUAGE"> </a> <article id="CONDITION MULTILANG-DOCUMENTATION:NO-SUCH-LANGUAGE"> <header class="condition"> <span class="type">condition</span>  <h4 class="name"><code><a href="#CONDITION%20MULTILANG-DOCUMENTATION%3ANO-SUCH-LANGUAGE">NO-SUCH-LANGUAGE</a></code></h4>  </header> <div class="docstring"><pre>Error signalled when an inexistent language is referenced.
+
+See <a href="#MULTILANG-DOCUMENTATION:IDENTIFIER">IDENTIFIER</a>
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:DOCUMENTATION"> </a> <article id="ACCESSOR MULTILANG-DOCUMENTATION:DOCUMENTATION"> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#ACCESSOR%20MULTILANG-DOCUMENTATION%3ADOCUMENTATION">DOCUMENTATION</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT TYPE &amp;KEY (LANG *LANGUAGE*)</code><code>)</code>  </header> <div class="docstring"><pre>Retrieve the documentation string for the given object and type.
+
+You may optionally specify the language that the docstring
+should be in. The default language is *LANGUAGE*, which
+will typically be automatically configured according to your
+system's locale settings.
+
+When reading a docstring, if there is no documentation stored
+specifically for the given language, and the language is eq
+to *LANGUAGE*, CL:DOCUMENTATION is consulted instead.
+
+When writing a docstring, if the language is eq to *LANGUAGE*,
+the docstring is also written to CL:DOCUMENTATION. Note that
+your implementation might not store docstrings for unknown
+documentation specifiers, but the language object will always
+do so regardless. Either way, this mechanism is mostly provided
+as a best-effort backwards compatibility to users of
+CL:DOCUMENTATION.
+
+See <a href="http://l1sp.org/cl/documentation">CL:DOCUMENTATION</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION*">DOCUMENTATION*</a>
+See <a href="#MULTILANG-DOCUMENTATION:*LANGUAGE*">*LANGUAGE*</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:DOCUMENTATION*"> </a> <article id="ACCESSOR MULTILANG-DOCUMENTATION:DOCUMENTATION*"> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#ACCESSOR%20MULTILANG-DOCUMENTATION%3ADOCUMENTATION%2A">DOCUMENTATION*</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT TYPE LANG</code><code>)</code>  </header> <div class="docstring"><pre>Access the docstring for the given object, type and language.
+
+If LANGUAGE is not an instance of LANGUAGE, the value is
+coerced to a LANGUAGE instance by way of the LANGUAGE
+function.
+
+When reading a docstring from an inexistent language, NIL
+is returned as well as a NO-SUCH-LANGUAGE instance as the
+secondary value.
+
+When writing a docstring to an inexistent language, a new
+language instance is automatically created by way of the
+:IF-DOES-NOT-EXIST :CREATE argument to the LANGUAGE function.
+
+If you are implementing your own subclass of LANGUAGE that
+bypasses the DOCUMENTATION-STORAGE mechanism, you should
+add methods to this function that provide the desired
+behaviour.
+
+See <a href="#MULTILANG-DOCUMENTATION:LANGUAGE">LANGUAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:CANONICALIZE-DOCTYPE">CANONICALIZE-DOCTYPE</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE">DOCUMENTATION-STORAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION">DOCUMENTATION</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:LANGUAGE"> </a> <article id="ACCESSOR MULTILANG-DOCUMENTATION:LANGUAGE"> <header class="accessor"> <span class="type">accessor</span>  <code>(</code><h4 class="name"><code><a href="#ACCESSOR%20MULTILANG-DOCUMENTATION%3ALANGUAGE">LANGUAGE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">IDENTIFIER &amp;KEY IF-DOES-NOT-EXIST</code><code>)</code>  </header> <div class="docstring"><pre>Returns the language object referred to by the given identifier.
+
+If a LANGUAGE instance is passed, the language instance is
+simply returned directly.
+
+IF-DOES-NOT-EXIST can be one of the following values,
+designating the behaviour if no language for the given
+identifier can be found:
+
+    :CREATE  --- A new SIMPLE-LANGUAGE instance is created
+                 and associated with the identifier.
+    :ERROR   --- An error of type NO-SUCH-LANGUAGE is
+                 signalled. The following restarts will be
+                 available:
+       USE-VALUE     --- Return the given restart value.
+       STORE-VALUE   --- Associate the given restart value
+                         with the identifier and return it.
+       MAKE-INSTANCE --- This behaviour is the same as
+                         :if-does-not-exist :create
+    NIL      --- Returns NIL.
+
+When USE-VALUE or STORE-VALUE are called interactively, the
+value is read and evaluated, and then passed through LANGUAGE
+to potentially coerce it to an existing language object.
+
+See *LANGUAGES*
+See <a href="#MULTILANG-DOCUMENTATION:SIMPLE-LANGUAGE">SIMPLE-LANGUAGE</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:CANONICALIZE-DOCTYPE"> </a> <article id="GENERIC MULTILANG-DOCUMENTATION:CANONICALIZE-DOCTYPE"> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#GENERIC%20MULTILANG-DOCUMENTATION%3ACANONICALIZE-DOCTYPE">CANONICALIZE-DOCTYPE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">OBJECT TYPE</code><code>)</code>  </header> <div class="docstring"><pre>This function should return a canonical representation for the given documentation specifier.
+
+Some documentation strings can be referred to by different
+specifiers. For instance:
+
+- (#&lt;function foo&gt; T)
+- (#&lt;function foo&gt; 'function)
+- ('foo 'function)
+
+All refer to the same documentation string. This function
+should ensure that the same identity is returned for any
+kind of duplicate specifier.
+
+You should add appropriate methods to this function for
+custom documentation specifiers / types.
+
+Note that the identifiers returned by this function are
+considered to be the same if they are equal under EQUAL.
+
+See <a href="http://l1sp.org/cl/equal">CL:EQUAL</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE"> </a> <article id="GENERIC MULTILANG-DOCUMENTATION:DOCUMENTATION-STORAGE"> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#GENERIC%20MULTILANG-DOCUMENTATION%3ADOCUMENTATION-STORAGE">DOCUMENTATION-STORAGE</a></code></h4> <code class="qualifiers"></code> <code class="arguments">LANGUAGE</code><code>)</code>  </header> <div class="docstring"><pre>Returns the hash-table for the docstring storage of the language.
+
+This hash-table must be using the EQUAL test.
+Keys are canonical docstring identifiers as returned by
+CANONICALIZE-DOCTYPE. Values are docstrings.
+
+See <a href="#MULTILANG-DOCUMENTATION:CANONICALIZE-DOCTYPE">CANONICALIZE-DOCTYPE</a>
+See <a href="#MULTILANG-DOCUMENTATION:DOCUMENTATION*">DOCUMENTATION*</a></pre></div> </article> </li>  <li> <a name="MULTILANG-DOCUMENTATION:IDENTIFIER"> </a> <article id="GENERIC MULTILANG-DOCUMENTATION:IDENTIFIER"> <header class="generic"> <span class="type">generic</span>  <code>(</code><h4 class="name"><code><a href="#GENERIC%20MULTILANG-DOCUMENTATION%3AIDENTIFIER">IDENTIFIER</a></code></h4> <code class="qualifiers"></code> <code class="arguments">CONDITION</code><code>)</code>  </header> <div class="docstring"><pre>Returns the identifier of the object.
+
+See <a href="#MULTILANG-DOCUMENTATION:NO-SUCH-LANGUAGE">NO-SUCH-LANGUAGE</a>
+See <a href="#MULTILANG-DOCUMENTATION:SIMPLE-LANGUAGE">SIMPLE-LANGUAGE</a></pre></div> </article> </li> </ul> </li> </ul> </article>  </main> </body> </html> 

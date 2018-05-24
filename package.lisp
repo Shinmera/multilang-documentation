@@ -18,6 +18,7 @@
    #:identifier
    #:language
    #:documentation-storage
+   #:simple-language
    #:language)
   ;; drop-in.lisp
   (:export
