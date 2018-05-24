@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.multilang-documentation)
 
 (defvar *languages* (make-hash-table :test 'equalp))
-(defvar *language* ())
+(defvar *language*)
 
 (define-condition no-such-language (error)
   ((identifier :initarg :identifier :reader identifier))
