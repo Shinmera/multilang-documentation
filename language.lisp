@@ -31,9 +31,9 @@
 
 (defgeneric language (identifier &key if-does-not-exist))
 
-(defun read-language ()
+(defun prompt-language ()
   (format *query-io* "~& Enter a new language (evaluated): ~%")
-  (language (eval (read *query-io*))))
+  (list (language (eval (read *query-io*)))))
 
 (defmethod language ((identifier string) &key (if-does-not-exist :error))
   (or (gethash identifier *languages*)
@@ -45,11 +45,11 @@
          (restart-case
              (error 'no-such-language :identifier identifier)
            (store-value (value)
-             :interactive read-language
+             :interactive prompt-language
              :report "Provide a language object to associate with the identifier."
              (setf (gethash identifier *languages*) value))
            (use-value (value)
-             :interactive read-language
+             :interactive prompt-language
              :report "Provide a language object to use."
              value)
            (make-instance ()

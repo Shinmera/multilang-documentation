@@ -27,7 +27,8 @@
 
 (defun documentation (object type &key (lang *language*))
   (or (documentation* object type lang)
-      (cl:documentation object type)))
+      (when (eq lang *language*)
+        (cl:documentation object type))))
 
 (defun (setf documentation) (docstring object type &key (lang *language*))
   (when (eq lang *language*)
