@@ -6,16 +6,10 @@
 
 (in-package #:org.shirakumo.multilang-documentation)
 
-(defvar *canonical-identities* (make-hash-table :test 'equal))
-
-(defun canonical-identity (object)
-  (or (gethash object *canonical-identities*)
-      (setf (gethash object *canonical-identities*) object)))
-
 (defgeneric canonicalize-doctype (object type))
 
 (defmethod canonicalize-doctype (object type)
-  (canonical-identity (list object type)))
+  (list object type))
 
 (defmethod canonicalize-doctype ((object function) type)
   object)
@@ -54,4 +48,4 @@
   (or (find-class object NIL)
       ;; If it's not a class-defined type, it might be a deftype-type,
       ;; which we can't retrieve. Fall back to the list, then.
-      (canonical-identity (list object type))))
+      (list object type)))

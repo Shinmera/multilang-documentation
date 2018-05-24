@@ -15,8 +15,8 @@
                                  (identifier c)))))
 
 (defclass language ()
-  ((identifier :initarg :identifier :accessor identifier)
-   (%documentation-storage :initform (make-hash-table :test 'eq) :accessor documentation-storage))
+  ((%identifier :initarg :identifier :reader identifier)
+   (%documentation-storage :initform (make-hash-table :test 'equal) :reader documentation-storage))
   (:default-initargs :identifier (error "IDENTIFIER required.")))
 
 (defmethod print-object ((language language) stream)
