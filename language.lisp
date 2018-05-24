@@ -31,18 +31,41 @@
 
 (defgeneric language (identifier &key if-does-not-exist))
 
+(defun read-language ()
+  (format *query-io* "~& Enter a new language (evaluated): ~%")
+  (language (eval (read *query-io*))))
+
 (defmethod language ((identifier string) &key (if-does-not-exist :error))
   (or (gethash identifier *languages*)
       (ecase if-does-not-exist
-        (:create (setf (gethash identifier *languages*)
+        (:create
+         (setf (gethash identifier *languages*)
                        (make-instance 'simple-language :identifier identifier)))
-        (:error (error 'no-such-language :identifier identifier))
-        ((NIL) NIL))))
+        (:error
+         (restart-case
+             (error 'no-such-language :identifier identifier)
+           (store-value (value)
+             :interactive read-language
+             :report "Provide a language object to associate with the identifier."
+             (setf (gethash identifier *languages*) value))
+           (use-value (value)
+             :interactive read-language
+             :report "Provide a language object to use."
+             value)
+           (make-instance ()
+             :report "Create a new simple-language object to use."
+             (language identifier :if-does-not-exist :create))))
+        ((NIL)
+         NIL))))
 
 (defmethod language ((identifier symbol) &key (if-does-not-exist :error))
   (language (or (first (language-codes:names identifier))
                 (string identifier))
             :if-does-not-exist if-does-not-exist))
+
+(defmethod language ((language language) &key if-does-not-exist)
+  (declare (ignore if-does-not-exist))
+  language)
 
 (defmethod (setf language) ((language language) (identifier string))
   (setf (gethash identifier *languages*) language))
