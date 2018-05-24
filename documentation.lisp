@@ -18,14 +18,13 @@ specifiers. For instance:
 - ('foo 'function)
 
 All refer to the same documentation string. This function
-should ensure that the same identity is returned for any
-kind of duplicate specifier.
+should return a value that identifies a docstring for the
+given object and type. The same (under EQUAL) value must
+be returned for any object and type combinations that
+should refer to the same docstring.
 
 You should add appropriate methods to this function for
 custom documentation specifiers / types.
-
-Note that the identifiers returned by this function are
-considered to be the same if they are equal under EQUAL.
 
 See CL:EQUAL")
 
