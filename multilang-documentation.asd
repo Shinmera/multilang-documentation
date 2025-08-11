@@ -4,7 +4,7 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "A drop-in replacement for CL:DOCUMENTATION providing multi-language docstrings"
-  :homepage "https://github.com/Shinmera/multilang-documentation"
+  :homepage "https://shinmera.com/project/multilang-documentation"
   :serial T
   :components ((:file "package")
                (:file "canonical")
